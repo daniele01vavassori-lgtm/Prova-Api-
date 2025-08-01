@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 OpenRouter AI Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            padding: 20px;
+            background: #d4edda;
+            color: #155724;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .demo-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .demo-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .response {
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .code-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .feature-card h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 OpenRouter AI Demo</h1>
+            <p>Testa la tua API Key con Gemini, GPT, Claude e altri modelli AI!</p>
+        </div>
+        
+        <div class="status">
+            ✅ API Key Configurata: sk-or-v1-...c9c10 | 🌟 OpenRouter | 🆓 Gemini Gratuito
+        </div>
+        
+        <div class="content">
+            <div class="demo-section">
+                <h3>💬 Test Chat con Gemini (GRATUITO)</h3>
+                <textarea id="chatMessage" placeholder="Scrivi il tuo messaggio qui...">Ciao! Puoi dirmi 3 curiosità interessanti sull'intelligenza artificiale?</textarea>
+                <button class="btn" onclick="testChat()">🚀 Invia a Gemini</button>
+                <div id="chatResponse"></div>
+            </div>
+            
+            <div class="demo-section">
+                <h3>👁️ Test Analisi Immagine con Gemini Vision</h3>
+                <input type="url" id="imageUrl" placeholder="URL dell'immagine" 
+                       value="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg">
+                <input type="text" id="imagePrompt" placeholder="Cosa vuoi sapere dell'immagine?" 
+                       value="Descrivi questa immagine in dettaglio">
+                <button class="btn" onclick="testVision()">👁️ Analizza Immagine</button>
+                <div id="visionResponse"></div>
+            </div>
+            
+            <div class="demo-section">
+                <h3>🔧 Codice per la Tua App</h3>
+                <p>Ecco come integrare OpenRouter nella tua applicazione:</p>
+                
+                <div class="code-example">
+import requests
+
+def chat_with_ai(message, model="google/gemini-2.5-flash-lite"):
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": "Bearer sk-or-v1-...",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": model,
+            "messages": [{"role": "user", "content": message}]
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# Esempio d'uso
+risposta = chat_with_ai("Ciao!")
+print(risposta)
+                </div>
+                
+                <button class="btn" onclick="copyCode()">📋 Copia Codice</button>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🧠 Gemini 2.5 Flash Lite</h4>
+                    <p><strong>GRATUITO</strong><br>Veloce e potente per la maggior parte dei compiti</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🤖 GPT-3.5 Turbo</h4>
+                    <p><strong>A pagamento</strong><br>Veloce ed economico per chat e codice</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🔥 Claude 3.7 Sonnet</h4>
+                    <p><strong>A pagamento</strong><br>Eccellente per scrittura e analisi</p>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>🦙 Llama 3.2 3B</h4>
+                    <p><strong>GRATUITO</strong><br>Modello open source alternativo</p>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <h3>🎯 Cosa Puoi Costruire</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 10px 0;">🤖 <strong>Chatbot per il tuo sito web</strong></li>
+                    <li style="padding: 10px 0;">📞 <strong>Assistente customer support</strong></li>
+                    <li style="padding: 10px 0;">👁️ <strong>Tool di analisi immagini</strong></li>
+                    <li style="padding: 10px 0;">✍️ <strong>Generatore di contenuti</strong></li>
+                    <li style="padding: 10px 0;">💻 <strong>Assistente di programmazione</strong></li>
+                    <li style="padding: 10px 0;">🌍 <strong>Servizio di traduzione</strong></li>
+                    <li style="padding: 10px 0;">📱 <strong>App mobile con AI</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "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";
+        
+        async function testChat() {
+            const message = document.getElementById('chatMessage').value;
+            const responseDiv = document.getElementById('chatResponse');
+            
+            if (!message.trim()) {
+                alert('Scrivi un messaggio!');
+                return;
+            }
+            
+            responseDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Gemini sta pensando...</div>';
+            
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'google/gemini-2.5-flash-lite',
+                        messages: [{ role: 'user', content: message }],
+                        max_tokens: 500
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const aiMessage = result.choices[0].message.content;
+                    responseDiv.innerHTML = `<div class="response">🤖 <strong>Gemini:</strong><br><br>${aiMessage}</div>`;
+                } else if (response.status === 429) {
+                    responseDiv.innerHTML = '<div class="response error">⚠️ Rate limit raggiunto. Aspetta qualche secondo e riprova.</div>';
+                } else {
+                    responseDiv.innerHTML = `<div class="response error">❌ Errore API: ${response.status}</div>`;
+                }
+                
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="response error">❌ Errore di connessione: ${error.message}</div>`;
+            }
+        }
+        
+        async function testVision() {
+            const imageUrl = document.getElementById('imageUrl').value;
+            const prompt = document.getElementById('imagePrompt').value;
+            const responseDiv = document.getElementById('visionResponse');
+            
+            if (!imageUrl.trim()) {
+                alert('Inserisci l\'URL dell\'immagine!');
+                return;
+            }
+            
+            responseDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Gemini sta analizzando l\'immagine...</div>';
+            
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'google/gemini-2.5-flash-lite',
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: prompt },
+                                { type: 'image_url', image_url: { url: imageUrl } }
+                            ]
+                        }],
+                        max_tokens: 500
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    const aiMessage = result.choices[0].message.content;
+                    responseDiv.innerHTML = `
+                        <div class="response">
+                            👁️ <strong>Gemini Vision vede:</strong><br><br>
+                            ${aiMessage}
+                            <br><br>
+                            <img src="${imageUrl}" style="max-width: 100%; height: auto; border-radius: 10px; margin-top: 15px;" 
+                                 onerror="this.style.display='none'">
+                        </div>
+                    `;
+                } else if (response.status === 429) {
+                    responseDiv.innerHTML = '<div class="response error">⚠️ Rate limit raggiunto. Aspetta qualche secondo e riprova.</div>';
+                } else {
+                    responseDiv.innerHTML = `<div class="response error">❌ Errore API: ${response.status}</div>`;
+                }
+                
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="response error">❌ Errore di connessione: ${error.message}</div>`;
+            }
+        }
+        
+        function copyCode() {
+            const code = `import requests
+
+def chat_with_ai(message, model="google/gemini-2.5-flash-lite"):
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": "Bearer ${API_KEY}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": model,
+            "messages": [{"role": "user", "content": message}]
+        }
+    )
+    return response.json()['choices'][0]['message']['content']
+
+# Esempio d'uso
+risposta = chat_with_ai("Ciao!")
+print(risposta)`;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ Codice copiato negli appunti!');
+            }).catch(() => {
+                alert('❌ Impossibile copiare il codice');
+            });
+        }
+        
+        // Enter per inviare
+        document.getElementById('chatMessage').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                testChat();
+            }
+        });
+        
+        document.getElementById('imageUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testVision();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 OpenRouter AI Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+        
+        .chat-section, .image-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-section {
+            border-right: 1px solid #eee;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .model-selector {
+            margin-bottom: 20px;
+        }
+        
+        .model-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group input, .input-group textarea {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            resize: vertical;
+        }
+        
+        .input-group textarea {
+            min-height: 100px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .response {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #eee;
+            overflow-y: auto;
+        }
+        
+        .response.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        
+        .response.error {
+            background: #fee;
+            border-color: #fcc;
+            color: #c33;
+        }
+        
+        .response.success {
+            background: #efe;
+            border-color: #cfc;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .model-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .free-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .paid-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-section {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 OpenRouter AI Tester</h1>
+            <p>Testa la tua API Key con Gemini, GPT, Claude e altri modelli AI!</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Sezione Chat -->
+            <div class="chat-section">
+                <h2 class="section-title">💬 Chat AI</h2>
+                
+                <div class="model-selector">
+                    <select id="chatModel">
+                        {% for key, model in models.items() %}
+                        <option value="{{ key }}">
+                            {{ model.name }} 
+                            {% if model.free %}(GRATUITO){% else %}(A pagamento){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="model-info" id="chatModelInfo"></div>
+                </div>
+                
+                <div class="input-group">
+                    <textarea id="chatMessage" placeholder="Scrivi il tuo messaggio qui..."></textarea>
+                    <button class="btn" onclick="sendMessage()">Invia</button>
+                </div>
+                
+                <div class="response" id="chatResponse">
+                    <p>💡 Seleziona un modello e scrivi un messaggio per iniziare!</p>
+                </div>
+            </div>
+            
+            <!-- Sezione Analisi Immagini -->
+            <div class="image-section">
+                <h2 class="section-title">👁️ Analisi Immagini</h2>
+                
+                <div class="model-selector">
+                    <select id="imageModel">
+                        {% for key, model in models.items() %}
+                        <option value="{{ key }}">
+                            {{ model.name }}
+                            {% if model.free %}(GRATUITO){% else %}(A pagamento){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="model-info" id="imageModelInfo"></div>
+                </div>
+                
+                <div class="input-group">
+                    <input type="url" id="imageUrl" placeholder="URL dell'immagine (es. https://...)">
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="imagePrompt" placeholder="Cosa vuoi sapere dell'immagine?" value="Descrivi questa immagine in dettaglio">
+                    <button class="btn" onclick="analyzeImage()">Analizza</button>
+                </div>
+                
+                <div class="response" id="imageResponse">
+                    <p>📸 Inserisci l'URL di un'immagine per l'analisi!</p>
+                    <p><strong>Esempi di URL:</strong></p>
+                    <p>• https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const models = {{ models | tojson }};
+        
+        // Aggiorna info modello
+        function updateModelInfo(selectId, infoId) {
+            const select = document.getElementById(selectId);
+            const info = document.getElementById(infoId);
+            const modelKey = select.value;
+            const model = models[modelKey];
+            
+            const badge = model.free ? 
+                '<span class="free-badge">🆓 GRATUITO</span>' : 
+                '<span class="paid-badge">💰 A PAGAMENTO</span>';
+            
+            info.innerHTML = model.description + ' ' + badge;
+        }
+        
+        // Inizializza info modelli
+        document.addEventListener('DOMContentLoaded', function() {
+            updateModelInfo('chatModel', 'chatModelInfo');
+            updateModelInfo('imageModel', 'imageModelInfo');
+            
+            document.getElementById('chatModel').addEventListener('change', () => {
+                updateModelInfo('chatModel', 'chatModelInfo');
+            });
+            
+            document.getElementById('imageModel').addEventListener('change', () => {
+                updateModelInfo('imageModel', 'imageModelInfo');
+            });
+        });
+        
+        // Invia messaggio chat
+        async function sendMessage() {
+            const message = document.getElementById('chatMessage').value.trim();
+            const model = document.getElementById('chatModel').value;
+            const responseDiv = document.getElementById('chatResponse');
+            
+            if (!message) {
+                alert('Scrivi un messaggio!');
+                return;
+            }
+            
+            // Mostra loading
+            responseDiv.className = 'response loading';
+            responseDiv.innerHTML = '<div class="spinner"></div>Pensando...';
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        model: model
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    responseDiv.className = 'response success';
+                    responseDiv.innerHTML = `
+                        <strong>🤖 ${models[model].name}:</strong><br><br>
+                        ${result.message.replace(/\n/g, '<br>')}
+                        <br><br>
+                        <small>Token utilizzati: ${result.tokens || 'N/A'}</small>
+                    `;
+                } else {
+                    responseDiv.className = 'response error';
+                    responseDiv.innerHTML = `<strong>❌ Errore:</strong><br>${result.error}`;
+                }
+                
+            } catch (error) {
+                responseDiv.className = 'response error';
+                responseDiv.innerHTML = `<strong>❌ Errore di connessione:</strong><br>${error.message}`;
+            }
+        }
+        
+        // Analizza immagine
+        async function analyzeImage() {
+            const imageUrl = document.getElementById('imageUrl').value.trim();
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            const model = document.getElementById('imageModel').value;
+            const responseDiv = document.getElementById('imageResponse');
+            
+            if (!imageUrl) {
+                alert('Inserisci l\'URL dell\'immagine!');
+                return;
+            }
+            
+            // Mostra loading
+            responseDiv.className = 'response loading';
+            responseDiv.innerHTML = '<div class="spinner"></div>Analizzando l\'immagine...';
+            
+            try {
+                const response = await fetch('/image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image_url: imageUrl,
+                        prompt: prompt,
+                        model: model
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    responseDiv.className = 'response success';
+                    responseDiv.innerHTML = `
+                        <strong>👁️ ${models[model].name} vede:</strong><br><br>
+                        ${result.message.replace(/\n/g, '<br>')}
+                        <br><br>
+                        <img src="${imageUrl}" style="max-width: 100%; height: auto; border-radius: 10px; margin-top: 10px;" onerror="this.style.display='none'">
+                    `;
+                } else {
+                    responseDiv.className = 'response error';
+                    responseDiv.innerHTML = `<strong>❌ Errore:</strong><br>${result.error}`;
+                }
+                
+            } catch (error) {
+                responseDiv.className = 'response error';
+                responseDiv.innerHTML = `<strong>❌ Errore di connessione:</strong><br>${error.message}`;
+            }
+        }
+        
+        // Enter per inviare
+        document.getElementById('chatMessage').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        document.getElementById('imageUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeImage();
+            }
+        });
+    </script>
+</body>
+</html>
